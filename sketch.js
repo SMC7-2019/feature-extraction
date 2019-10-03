@@ -15,31 +15,16 @@ let isVideoPlaying = false;
 
 function setup() {
 
-    createCanvas(1280, 720);
+    var canvas = createCanvas(1280, 720);
+    canvas.parent('main');
 
     video = createVideo(['video/Top Fifteen Female Ballet Dancers.mp4']);
     video.onended(videoEnded);
     video.hide();
 
-    button = createButton("Play");
-    button.mousePressed(togglePlay);
-    button.style('color', color('#ffffff'));
-    button.style('background-color', color('#3262b5'));
-    button.style('border-radius', '.25rem');
-    button.style('font-size', '1rem');
-    button.hide();
-
-
-button.style('display', 'inline-block');
-button.style('font-weight', '400');
-button.style('text-align', 'center');
-button.style('white-space', 'nowrap');
-button.style('vertical-align', 'middle');
-button.style('border', '1px solid transparent');
-button.style('padding', '.375rem .75rem');
-button.style('line-height', '1.5');
-
-
+    buttonPlay = select('#buttonPlay');
+    buttonPlay.hide();
+    buttonPlay.mousePressed(togglePlay);
 
     poseNet = ml5.poseNet(video, options, modelReady);
     poseNet.on('pose', function(results) {
@@ -51,17 +36,18 @@ button.style('line-height', '1.5');
 function togglePlay() {
     if (!isVideoPlaying) {
         video.play().time(playFrom);
-        button.html('Stop');
+        buttonPlay.html('Stop');
     } else {
         video.stop().time(playFrom);
-        button.html('Play');
+        buttonPlay.html('Play');
     }
     isVideoPlaying = !isVideoPlaying;
 }
 
 
 function modelReady() {
-    button.show();
+    buttonPlay.show();
+    video.time(playFrom);
 }
 
 
