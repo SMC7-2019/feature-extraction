@@ -19,7 +19,7 @@ let minScore = 0.6;
 let isVideoPlaying = false;
 
 let json = {
-    frames:[]
+    frames: []
 };
 
 function setup() {
@@ -32,8 +32,14 @@ function setup() {
     video.hide();
 
     buttonPlay = select('#buttonPlay');
-    buttonPlay.hide();
+    buttonPlay.html('Extract features');
     buttonPlay.mousePressed(togglePlay);
+    buttonPlay.attribute('disabled', true);
+
+    buttonSave = select('#buttonSave');
+    buttonSave.html('Save features');
+    buttonSave.mousePressed(saveData);
+    buttonSave.attribute('disabled', true);
 
     frameCounterElt = select('#frameCounter');
     frameCounterElt.hide();
@@ -52,8 +58,8 @@ function setup() {
 function draw() {
 
     image(video, 0, 0, width, height);
+
     if (poses.length > 0) {
-        //drawSkeletons();
         drawJoints();
         if (isVideoPlaying) {
             json.frames.push({ "frame": frameCounter, "time": video.time(), "data": poses[0].pose.keypoints })
@@ -69,12 +75,13 @@ function draw() {
         json.videoStart = playFrom;
         json.videoEnd = playTo;
         json.totalFames = frameCounter;
-        saveJSON(json, videoFile + '.json')
 
-        buttonPlay.html('Play');
+        buttonSave.removeAttribute('disabled');
+
+        buttonPlay.html('Extract features');
         frameCounter = 0;
         isVideoPlaying = false;
-        console.log(json);
+
     }
     frameCounterElt.html('Frame ' + frameCounter);
 }
@@ -82,12 +89,14 @@ function draw() {
 
 function togglePlay() {
 
+    buttonSave.attribute('disabled', true);
+   
     if (!isVideoPlaying) {
         video.play().time(playFrom);
         buttonPlay.html('Stop');
     } else {
         video.stop().time(playFrom);
-        buttonPlay.html('Play');
+        buttonPlay.html('Extract features');
         frameCounter = 0;
     }
     isVideoPlaying = !isVideoPlaying;
@@ -95,7 +104,7 @@ function togglePlay() {
 
 
 function modelReady() {
-    buttonPlay.show();
+    buttonPlay.removeAttribute('disabled');
     frameCounterElt.show();
     video.time(playFrom);
 }
@@ -138,4 +147,9 @@ function drawJoints() {
             circle(poses[i].pose.keypoints[j].position.x, poses[i].pose.keypoints[j].position.y, radius);
         }
     }
+}
+
+
+function saveData() {
+    saveJSON(json, videoFile + '.json');
 }
