@@ -69,23 +69,25 @@ function draw() {
         $("#spinnerFrom").spinner({
             min: 0,
             max: videoDuration,
-            step: 0.02,
+            step: 0.04,
             value: videoFrom,
             spin: function(event, ui) {
                 videoFrom = ui.value;
                 $("#sliderRange").slider("values", [videoFrom, videoTo]);
+                video.time(videoFrom);
             }
         });
         $("#spinnerFrom").width(80);
         $("#spinnerTo").spinner({
             min: 0,
             max: videoDuration,
-            step: 0.02,
+            step: 0.04,
             value: videoTo,
             spin: function(event, ui) {
                 videoTo = ui.value;
                 $("#sliderRange").slider("values", [videoFrom, videoTo]);
-            }            
+                video.time(videoTo);
+            }
         });
         $("#spinnerTo").width(80);
         $("#sliderRange").slider({
@@ -93,10 +95,16 @@ function draw() {
             min: 0,
             max: videoDuration,
             values: [videoFrom, videoTo],
-            step: 0.02,
+            step: 0.04,
             slide: function(event, ui) {
-                videoFrom = ui.values[0];
-                videoTo = ui.values[1];
+                if (videoFrom != ui.values[0]) {
+                    videoFrom = ui.values[0];
+                    video.time(videoFrom);
+                }
+                if (videoTo != ui.values[1]) {
+                    videoTo = ui.values[1];
+                    video.time(videoTo);
+                }
                 $("#spinnerFrom").spinner("value", videoFrom);
                 $("#spinnerTo").spinner("value", videoTo);
             }
@@ -144,12 +152,16 @@ function togglePlay() {
     buttonSave.attribute('disabled', true);
 
     if (!isVideoPlaying) {
+        frameCounter = 0;
+        lastVideoTime = -1;
+        json = {
+            frames: []
+        };
         video.play().time(videoFrom);
         buttonPlay.html('Stop');
     } else {
         video.stop().time(videoFrom);
         buttonPlay.html('Extract features');
-        frameCounter = 0;
     }
     isVideoPlaying = !isVideoPlaying;
 }
