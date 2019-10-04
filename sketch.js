@@ -11,10 +11,12 @@ let options = {
 }
 
 let videoFile = 'Top Fifteen Female Ballet Dancers.mp4';
-let playFrom = 209;
-let playTo = 213.8;
+let videoFrom = 100;
+let videoTo = 200;
+let videoDuration = -1;
 let frameCounter = 0;
 let minScore = 0.6;
+let lastVideoTime = -1;
 
 let isVideoPlaying = false;
 
@@ -22,7 +24,11 @@ let json = {
     frames: []
 };
 
+//Slider code: https://codepen.io/faur/pen/WXzQxN
+
+
 function setup() {
+
 
     var canvas = createCanvas(1280, 720);
     canvas.parent('main');
@@ -57,23 +63,68 @@ function setup() {
 
 function draw() {
 
+    if (video.elt.duration !== 'undefined' && !isNaN(video.elt.duration) && videoDuration == -1) {
+        videoDuration = video.elt.duration;
+        //videoDuration= 300;
+        $("#spinnerFrom").spinner({
+            min: 0,
+            max: videoDuration,
+            step: 0.02,
+            value: videoFrom,
+            spin: function(event, ui) {
+                videoFrom = ui.value;
+                $("#sliderRange").slider("values", [videoFrom, videoTo]);
+            }
+        });
+        $("#spinnerFrom").width(80);
+        $("#spinnerTo").spinner({
+            min: 0,
+            max: videoDuration,
+            step: 0.02,
+            value: videoTo,
+            spin: function(event, ui) {
+                videoTo = ui.value;
+                $("#sliderRange").slider("values", [videoFrom, videoTo]);
+            }            
+        });
+        $("#spinnerTo").width(80);
+        $("#sliderRange").slider({
+            range: true,
+            min: 0,
+            max: videoDuration,
+            values: [videoFrom, videoTo],
+            step: 0.02,
+            slide: function(event, ui) {
+                videoFrom = ui.values[0];
+                videoTo = ui.values[1];
+                $("#spinnerFrom").spinner("value", videoFrom);
+                $("#spinnerTo").spinner("value", videoTo);
+            }
+        });
+        $("#spinnerFrom").spinner("value", videoFrom);
+        $("#spinnerTo").spinner("value", videoTo);
+    }
+
     image(video, 0, 0, width, height);
+
+    currVideoTime = video.time();
 
     if (poses.length > 0) {
         drawJoints();
-        if (isVideoPlaying) {
-            json.frames.push({ "frame": frameCounter, "time": video.time(), "data": poses[0].pose.keypoints })
+        if (isVideoPlaying && currVideoTime > lastVideoTime) {
+            json.frames.push({ "frame": frameCounter, "time": currVideoTime, "data": poses[0].pose.keypoints })
             frameCounter++;
+            lastVideoTime = currVideoTime;
         }
     }
 
-    if (isVideoPlaying && video.time() >= playTo) {
+    if (isVideoPlaying && currVideoTime >= videoTo) {
 
-        video.stop().time(playFrom);
+        video.stop().time(videoFrom);
 
         json.filename = videoFile;
-        json.videoStart = playFrom;
-        json.videoEnd = playTo;
+        json.videoStart = videoFrom;
+        json.videoEnd = videoTo;
         json.totalFames = frameCounter;
 
         buttonSave.removeAttribute('disabled');
@@ -81,6 +132,7 @@ function draw() {
         buttonPlay.html('Extract features');
         frameCounter = 0;
         isVideoPlaying = false;
+        lastVideoTime = -1;
 
     }
     frameCounterElt.html('Frame ' + frameCounter);
@@ -90,12 +142,12 @@ function draw() {
 function togglePlay() {
 
     buttonSave.attribute('disabled', true);
-   
+
     if (!isVideoPlaying) {
-        video.play().time(playFrom);
+        video.play().time(videoFrom);
         buttonPlay.html('Stop');
     } else {
-        video.stop().time(playFrom);
+        video.stop().time(videoFrom);
         buttonPlay.html('Extract features');
         frameCounter = 0;
     }
@@ -106,7 +158,7 @@ function togglePlay() {
 function modelReady() {
     buttonPlay.removeAttribute('disabled');
     frameCounterElt.show();
-    video.time(playFrom);
+    video.time(videoFrom);
 }
 
 
