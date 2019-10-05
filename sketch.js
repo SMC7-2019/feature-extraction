@@ -11,7 +11,7 @@ let options = {
 }
 
 let videoFile = 'Top Fifteen Female Ballet Dancers.mp4';
-let videoFrom = 100;
+let videoFrom = 195
 let videoTo = 200;
 let videoDuration = -1;
 let frameCounter = 0;
@@ -47,11 +47,7 @@ function setup() {
     buttonSave.mousePressed(saveData);
     buttonSave.attribute('disabled', true);
 
-    frameCounterElt = select('#frameCounter');
-    frameCounterElt.hide();
-
-    minScoreElt = select('#minScore');
-    minScoreElt.html('Min. score ' + minScore);
+    extProgress = select('#extProgress');
 
     poseNet = ml5.poseNet(video, options, modelReady);
     poseNet.on('pose', function(results) {
@@ -72,24 +68,30 @@ function draw() {
             step: 0.04,
             value: videoFrom,
             spin: function(event, ui) {
+                if (ui.value >= videoTo) {
+                    return false;
+                }
                 videoFrom = ui.value;
                 $("#sliderRange").slider("values", [videoFrom, videoTo]);
                 video.time(videoFrom);
             }
         });
-        $("#spinnerFrom").width(80);
+        $("#spinnerFrom").width('100%');
         $("#spinnerTo").spinner({
             min: 0,
             max: videoDuration,
             step: 0.04,
             value: videoTo,
             spin: function(event, ui) {
+                if (ui.value <= videoFrom) {
+                    return false;
+                }
                 videoTo = ui.value;
                 $("#sliderRange").slider("values", [videoFrom, videoTo]);
                 video.time(videoTo);
             }
         });
-        $("#spinnerTo").width(80);
+        $("#spinnerTo").width('100%');
         $("#sliderRange").slider({
             range: true,
             min: 0,
@@ -121,6 +123,9 @@ function draw() {
         drawJoints();
         if (isVideoPlaying && currVideoTime > lastVideoTime) {
             json.frames.push({ "frame": frameCounter, "time": currVideoTime, "data": poses[0].pose.keypoints })
+            extProgress.html(frameCounter + ' frames. ' + (videoTo - currVideoTime).toFixed(1) + 's left');
+            extProgress.style('width', (100 * (currVideoTime - videoFrom) / (videoTo - videoFrom)) + '%');
+            //console.log((100 * (currVideoTime - videoFrom) / (videoTo - videoFrom)));
             frameCounter++;
             lastVideoTime = currVideoTime;
         }
@@ -136,14 +141,17 @@ function draw() {
         json.totalFames = frameCounter;
 
         buttonSave.removeAttribute('disabled');
-
         buttonPlay.html('Extract features');
+        $("#spinnerFrom").spinner("enable");
+        $("#spinnerTo").spinner("enable");
+        $("#sliderRange").slider("enable");
+        extProgress.html(frameCounter + ' frames. 0s left');
+
         frameCounter = 0;
         isVideoPlaying = false;
         lastVideoTime = -1;
 
     }
-    frameCounterElt.html('Frame ' + frameCounter);
 }
 
 
@@ -157,11 +165,17 @@ function togglePlay() {
         json = {
             frames: []
         };
-        video.play().time(videoFrom);
+        video.time(videoFrom).play();
         buttonPlay.html('Stop');
+        $("#spinnerFrom").spinner("disable");
+        $("#spinnerTo").spinner("disable");
+        $("#sliderRange").slider("disable");
     } else {
         video.stop().time(videoFrom);
         buttonPlay.html('Extract features');
+        $("#spinnerFrom").spinner("enable");
+        $("#spinnerTo").spinner("enable");
+        $("#sliderRange").slider("enable");
     }
     isVideoPlaying = !isVideoPlaying;
 }
@@ -169,7 +183,6 @@ function togglePlay() {
 
 function modelReady() {
     buttonPlay.removeAttribute('disabled');
-    frameCounterElt.show();
     video.time(videoFrom);
 }
 
