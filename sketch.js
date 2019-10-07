@@ -138,7 +138,7 @@ function draw() {
         json.filename = videoFile;
         json.videoStart = videoFrom;
         json.videoEnd = videoTo;
-        json.totalFames = frameCounter;
+        json.totalFrames = frameCounter;
 
         buttonSave.removeAttribute('disabled');
         buttonPlay.html('Extract features');
