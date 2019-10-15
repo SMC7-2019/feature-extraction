@@ -3,7 +3,7 @@ let poseNet;
 let poses = [];
 let options = {
     imageScaleFactor: 0.3,
-    outputStride: 16,
+    outputStride: 8,
     minConfidence: 0.3,
     maxPoseDetections: 1,
     detectionType: 'single',
@@ -49,6 +49,9 @@ function setup() {
 
     extProgress = select('#extProgress');
 
+    if(width==640) {
+        options.imageScaleFactor=0.8;
+    }
     poseNet = ml5.poseNet(video, options, modelReady);
     poseNet.on('pose', function(results) {
         poses = results;
